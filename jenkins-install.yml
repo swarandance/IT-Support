@@ -1,0 +1,37 @@
+sudo yum install -y ansible
+cat > jenkins-install.yml << 'EOF'
+---
+- name: Install Jenkins
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Install Java
+      become: true
+      yum:
+        name: java-11-openjdk
+        state: present
+    - name: Add Jenkins repo
+      become: true
+      get_url:
+        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+    - name: Import Jenkins key
+      become: true
+      rpm_key:
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+        state: present
+    - name: Install Jenkins
+      become: true
+      yum:
+        name: jenkins
+        state: present
+    - name: Enable and start Jenkins
+      become: true
+      service:
+        name: jenkins
+        enabled: true
+        state: started
+EOF
+
+ansible-playbook jenkins-install.yml
